@@ -1,0 +1,19 @@
+{
+  "_note": "trust: primary = advisory databases and the researchers who find the malware; press = security news, which needs a stronger topic match to be kept.",
+  "feeds": [
+    {"id": "socket",      "name": "Socket",                "url": "https://socket.dev/api/blog/feed.atom",                      "trust": "primary"},
+    {"id": "aikido",      "name": "Aikido",                "url": "https://www.aikido.dev/blog/rss.xml",                        "trust": "primary"},
+    {"id": "stepsecurity","name": "StepSecurity",          "url": "https://www.stepsecurity.io/blog/rss.xml",                   "trust": "primary"},
+    {"id": "reversinglabs","name": "ReversingLabs",        "url": "https://www.reversinglabs.com/blog/rss.xml",                 "trust": "primary"},
+    {"id": "datadog",     "name": "Datadog Security Labs", "url": "https://securitylabs.datadoghq.com/rss/feed.xml",            "trust": "primary"},
+    {"id": "wiz",         "name": "Wiz",                   "url": "https://www.wiz.io/feed/rss.xml",                            "trust": "primary"},
+    {"id": "github-sec",  "name": "GitHub Security Blog",  "url": "https://github.blog/security/feed/",                         "trust": "primary"},
+    {"id": "google-sec",  "name": "Google Security Blog",  "url": "https://security.googleblog.com/feeds/posts/default",        "trust": "primary"},
+    {"id": "pypi-blog",   "name": "PyPI Blog",             "url": "https://blog.pypi.org/feed_rss_created.xml",                 "trust": "primary"},
+    {"id": "embracethered","name": "Embrace The Red",      "url": "https://embracethered.com/blog/index.xml",                   "trust": "primary"},
+    {"id": "willison-pi", "name": "Simon Willison (prompt injection)", "url": "https://simonwillison.net/tags/prompt-injection.atom", "trust": "primary"},
+    {"id": "bleeping",    "name": "BleepingComputer",      "url": "https://www.bleepingcomputer.com/feed/",                     "trust": "press"},
+    {"id": "thn",         "name": "The Hacker News",       "url": "https://feeds.feedburner.com/TheHackersNews",                "trust": "press"}
+  ],
+  "kev": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+}
