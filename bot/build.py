@@ -356,6 +356,11 @@ def post(url, payload):
                                  headers={"Content-Type": "application/json", "User-Agent": UA})
     urllib.request.urlopen(req, timeout=20).read()
 
+def md(s):
+    """Feed and model text is data: escape Discord markdown so it cannot
+    format, mask a link or break out of the embed's own [Watchfire](...)."""
+    return re.sub(r"([\\*_~`|>\[\]()#-])", r"\\\1", s)
+
 def announce(items):
     """Telegram and Discord both have proper bot APIs; WhatsApp Channels have
     none (Meta's Cloud API does not support them). Errors are logged by type
@@ -380,8 +385,8 @@ def announce(items):
             except Exception as e:
                 log("telegram post failed:", type(e).__name__, getattr(e, "code", ""))
         if dc:
-            desc = i["summary"][:300] + (("\n**What to do:** " + i["action"]) if i.get("action") else "") + \
-                   "\n[Watchfire](%s) · %s" % (link, meta)
+            desc = md(i["summary"][:300]) + (("\n**What to do:** " + md(i["action"])) if i.get("action") else "") + \
+                   "\n[Watchfire](%s) · %s" % (link, md(meta))
             try:
                 post(dc, {"allowed_mentions": {"parse": []},   # a title saying @everyone pings no one
                           "embeds": [{"title": head[:250], "url": i["url"], "description": desc[:2000],
