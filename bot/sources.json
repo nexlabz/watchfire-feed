@@ -15,5 +15,20 @@
     {"id": "bleeping",    "name": "BleepingComputer",      "url": "https://www.bleepingcomputer.com/feed/",                     "trust": "press"},
     {"id": "thn",         "name": "The Hacker News",       "url": "https://feeds.feedburner.com/TheHackersNews",                "trust": "press"}
   ],
+  "_note_platforms": "AI platforms: official company blogs, release feeds and status pages only. blog = kept when it matters to developers; release = x.y.0 only; status = outages only. match narrows a prolific feed.",
+  "platforms": [
+    {"id": "openai-news", "name": "OpenAI",                  "url": "https://openai.com/news/rss.xml",                             "kind": "blog"},
+    {"id": "google-dev",  "name": "Google for Developers",   "url": "https://developers.googleblog.com/feeds/posts/default",       "kind": "blog"},
+    {"id": "nvidia-dev",  "name": "NVIDIA Developer",        "url": "https://developer.nvidia.com/blog/feed/",                     "kind": "blog", "match": "release|launch|introduc|now available|deprecat|cuda|nim\\b|sdk|api\\b|model"},
+    {"id": "huggingface", "name": "Hugging Face",            "url": "https://huggingface.co/blog/feed.xml",                        "kind": "blog"},
+    {"id": "ollama",      "name": "Ollama",                  "url": "https://ollama.com/blog/rss.xml",                             "kind": "blog"},
+    {"id": "gh-changelog","name": "GitHub Changelog",        "url": "https://github.blog/changelog/feed/",                         "kind": "blog", "match": "copilot|deprecat|retire|sunset|breaking|models?\\b|agent"},
+    {"id": "claude-code", "name": "Claude Code (Anthropic)", "url": "https://github.com/anthropics/claude-code/releases.atom",      "kind": "release", "action": "Update: `claude update`."},
+    {"id": "anthropic-py","name": "Anthropic Python SDK",    "url": "https://github.com/anthropics/anthropic-sdk-python/releases.atom", "kind": "release", "action": "Upgrade: `pip install -U anthropic` — read the release notes first."},
+    {"id": "openai-py",   "name": "OpenAI Python SDK",       "url": "https://github.com/openai/openai-python/releases.atom",       "kind": "release", "action": "Upgrade: `pip install -U openai` — read the release notes first."},
+    {"id": "codex",       "name": "Codex CLI (OpenAI)",      "url": "https://github.com/openai/codex/releases.atom",               "kind": "release", "action": "Update: `npm i -g @openai/codex`."},
+    {"id": "gemini-cli",  "name": "Gemini CLI (Google)",     "url": "https://github.com/google-gemini/gemini-cli/releases.atom",   "kind": "release", "action": "Update: `npm i -g @google/gemini-cli`."},
+    {"id": "anthropic-status", "name": "Anthropic status",   "url": "https://status.anthropic.com/history.atom",                   "kind": "status"}
+  ],
   "kev": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 }

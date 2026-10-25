@@ -1,0 +1,23 @@
+<!doctype html>
+<!-- Watchfire in an iframe, for pages that cannot run a third-party script:
+     <iframe src="https://nexlabz.github.io/watchfire-feed/embed.html?topic=npm&limit=5"
+             width="100%" height="420" style="border:0" loading="lazy" title="Watchfire"></iframe>
+     Same parameters as widget.js: topic, limit, theme. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Watchfire</title>
+<style>html,body{margin:0;background:transparent}</style>
+<body>
+<!-- in <body>: the widget mounts next to its own script tag -->
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search), s = document.createElement("script");
+    s.src = "widget.js";
+    ["topic", "limit", "theme"].forEach(function (k) {
+      var v = q.get(k);
+      if (v && /^[a-z0-9-]{1,20}$/.test(v)) s.dataset[k] = v;
+    });
+    document.currentScript.after(s);
+  })();
+</script>
