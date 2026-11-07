@@ -65,7 +65,7 @@
   fetch(base + "news.json", { credentials: "omit" })
     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(function (d) {
-      var site = safe(d.site) || "https://fresh-reads.lovable.app/";
+      var site = safe(d.site) || "https://watchfire.nexprove.com/";
       var more = el("a", null, "more →");
       more.href = site + (topic ? "?category=" + encodeURIComponent(topic) : "");
       more.target = "_blank"; more.rel = "noopener";
