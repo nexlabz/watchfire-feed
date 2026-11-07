@@ -30,7 +30,7 @@ without it, the bot still runs on rules. The URL of an item is never taken
 from the model — always from the source.
 """
 import datetime as dt, email.utils, hashlib, html, json, os, re, shutil, sys, time
-import urllib.parse, urllib.request
+import concurrent.futures, urllib.parse, urllib.request
 import xml.etree.ElementTree as ET
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else "site"
@@ -439,6 +439,36 @@ def rss(items, title, link):
             "researchers who find supply-chain malware.</description><lastBuildDate>%s</lastBuildDate>%s</channel></rss>") % (
         html.escape(title), html.escape(link), email.utils.format_datetime(NOW), "".join(it(i) for i in items[:60]))
 
+OG = re.compile(r'<meta\b[^>]*?(?:property|name)\s*=\s*["\'](?:og:image|og:image:url|twitter:image)["\'][^>]*>', re.I)
+CONTENT = re.compile(r'content\s*=\s*["\']([^"\']+)["\']', re.I)
+
+def og_image(url):
+    """The page's own preview image (og:image / twitter:image), or None.
+    Reads at most 400 KB of the page; only an https image URL is kept."""
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "text/html"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            if "html" not in (r.headers.get("Content-Type") or ""): return None
+            page = r.read(400 * 1024).decode("utf-8", "replace")
+    except Exception:
+        return None
+    for tag in OG.findall(page):
+        m = CONTENT.search(tag)
+        if not m: continue
+        img = urllib.parse.urljoin(url, html.unescape(m.group(1)).strip())
+        if img.startswith("https://") and len(img) <= 600 and not re.search(r"\s", img):
+            return img
+    return None
+
+def images(items, budget=150):
+    """Look up a preview image once per item: a miss is stored as None so it
+    is not fetched again. Lookups run in parallel and are capped per run."""
+    todo = [m for m in items if "image" not in m and str(m.get("url", "")).startswith("https://")][:budget]
+    with concurrent.futures.ThreadPoolExecutor(8) as ex:
+        for m, img in zip(todo, ex.map(lambda m: og_image(m["url"]), todo)):
+            m["image"] = img
+    log("images: looked up %d, found %d" % (len(todo), sum(1 for m in todo if m["image"])))
+
 def main():
     try:
         prev = json.loads(get(SITE + "news.json")).get("items", [])
@@ -463,6 +493,7 @@ def main():
               or (when(m["published"]) or NOW) >= NOW - dt.timedelta(days=2)]
     merged.sort(key=lambda m: when(m["published"]) or NOW, reverse=True)
     for m in merged: m.pop("_enriched", None)
+    images(merged)
 
     os.makedirs(os.path.join(OUT, "feeds"), exist_ok=True)
     json.dump({"generated": NOW.isoformat(), "name": "Watchfire", "site": NEWSROOM, "feed": SITE,
