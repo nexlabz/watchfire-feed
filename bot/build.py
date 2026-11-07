@@ -30,7 +30,7 @@ without it, the bot still runs on rules. The URL of an item is never taken
 from the model — always from the source.
 """
 import datetime as dt, email.utils, hashlib, html, json, os, re, shutil, sys, time
-import concurrent.futures, urllib.parse, urllib.request
+import concurrent.futures, ipaddress, socket, urllib.parse, urllib.request
 import xml.etree.ElementTree as ET
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else "site"
@@ -442,14 +442,41 @@ def rss(items, title, link):
 OG = re.compile(r'<meta\b[^>]*?(?:property|name)\s*=\s*["\'](?:og:image|og:image:url|twitter:image)["\'][^>]*>', re.I)
 CONTENT = re.compile(r'content\s*=\s*["\']([^"\']+)["\']', re.I)
 
-def og_image(url):
+def public_https(url):
+    """True only for an https URL whose host resolves solely to public addresses,
+    so a feed entry cannot point the runner at loopback, link-local (cloud
+    metadata) or private networks."""
+    try:
+        u = urllib.parse.urlsplit(url)
+        if u.scheme != "https" or not u.hostname: return False
+        addrs = socket.getaddrinfo(u.hostname, u.port or 443, proto=socket.IPPROTO_TCP)
+        return bool(addrs) and all(ipaddress.ip_address(a[4][0]).is_global for a in addrs)
+    except Exception:
+        return False
+
+class _CheckedRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not public_https(newurl): return None
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+_opener = urllib.request.build_opener(_CheckedRedirect)
+
+def og_image(url, limit=10):
     """The page's own preview image (og:image / twitter:image), or None.
-    Reads at most 400 KB of the page; only an https image URL is kept."""
+    Public https hosts only (redirects re-checked), at most 400 KB read and
+    `limit` seconds of wall-clock time per page; only an https image is kept."""
+    if not public_https(url): return None
+    t0 = time.monotonic()
     try:
         req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "text/html"})
-        with urllib.request.urlopen(req, timeout=10) as r:
+        with _opener.open(req, timeout=5) as r:
             if "html" not in (r.headers.get("Content-Type") or ""): return None
-            page = r.read(400 * 1024).decode("utf-8", "replace")
+            buf = b""
+            while len(buf) < 400 * 1024 and time.monotonic() - t0 < limit:
+                chunk = r.read(16 * 1024)
+                if not chunk: break
+                buf += chunk
+            page = buf.decode("utf-8", "replace")
     except Exception:
         return None
     for tag in OG.findall(page):
@@ -460,14 +487,19 @@ def og_image(url):
             return img
     return None
 
-def images(items, budget=150):
+def images(items, budget=150, total=120):
     """Look up a preview image once per item: a miss is stored as None so it
-    is not fetched again. Lookups run in parallel and are capped per run."""
+    is not fetched again. Lookups run in parallel, capped per run, and the
+    whole phase stops after `total` seconds; whatever is unfinished is left
+    for the next run."""
     todo = [m for m in items if "image" not in m and str(m.get("url", "")).startswith("https://")][:budget]
-    with concurrent.futures.ThreadPoolExecutor(8) as ex:
-        for m, img in zip(todo, ex.map(lambda m: og_image(m["url"]), todo)):
-            m["image"] = img
-    log("images: looked up %d, found %d" % (len(todo), sum(1 for m in todo if m["image"])))
+    ex = concurrent.futures.ThreadPoolExecutor(8)
+    futs = {ex.submit(og_image, m["url"]): m for m in todo}
+    done, _ = concurrent.futures.wait(futs, timeout=total)
+    ex.shutdown(wait=False, cancel_futures=True)
+    for f in done:
+        futs[f]["image"] = f.result()
+    log("images: looked up %d of %d, found %d" % (len(done), len(todo), sum(1 for f in done if f.result())))
 
 def main():
     try:
