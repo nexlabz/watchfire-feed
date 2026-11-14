@@ -1,6 +1,6 @@
 # watchfire-feed
 
-The feed behind [Watchfire](https://fresh-reads.lovable.app/): what developers
+The feed behind [Watchfire](https://watchfire.nexprove.com/): what developers
 should know about, and what to do. Rebuilt every two hours by a GitHub Action
 and published at <https://nexlabz.github.io/watchfire-feed/>:
 
